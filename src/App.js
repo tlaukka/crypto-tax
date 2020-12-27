@@ -3,16 +3,26 @@ import styled from '@emotion/styled'
 import qs from 'qs'
 import Papa from 'papaparse'
 
+const TAX_RATE_LOW = 0.3
+const TAX_RATE_HIGH = 0.34
+
 const HEADERS = [
-  'Asset',
-  'Quantity Transacted',
-  'EUR Spot Price at Transaction'
+  'Timestamp',
+  'Quantity',
+  'Total',
+  'Fees'
 ]
 
-const DATA_FIELDS = {
-  'Asset': { name: 'Asset', index: 3 },
-  'Quantity Transacted': { name: 'Quantity Transacted', index: 4 },
-  'EUR Spot Price at Transaction': { name: 'EUR Spot Price at Transaction', index: 5 }
+const DataFields = {
+  Timestamp: 0,
+  TransactionType: 1,
+  Asset: 2,
+  Quantity: 3,
+  SpotPrice: 4,
+  Subtotal: 5,
+  Total: 6,
+  Fees: 7,
+  Notes: 8
 }
 
 const Container = styled.div({
@@ -27,12 +37,26 @@ const Header = styled.h1({
 })
 
 const Content = styled.div({
+  minHeight: 400,
   color: '#a1a1a1'
 })
 
 const Query = styled.div({
   marginBottom: 12,
   color: '#faa1a1'
+})
+
+const InfoContainer = styled.div({
+  display: 'flex',
+  alignItems: 'center',
+  marginBottom: 8,
+  'span': {
+    marginLeft: 8
+  }
+})
+
+const DataTable = styled.table({
+  marginBottom: 24
 })
 
 const queryUrl = 'https://api.coingecko.com/api/v3/coins/markets'
@@ -59,7 +83,12 @@ function App() {
 
           response.json().then((data) => {
             console.log(data)
-            setMarketData(data)
+            const marketData = data.reduce((result, entry) => {
+              result[entry.symbol] = entry
+              return result
+            }, {})
+
+            setMarketData(marketData)
           })
         })
         .catch((error) => {
@@ -89,39 +118,143 @@ function App() {
 
         Papa.parse(file, {
           delimiter: ',',
+          dynamicTyping: true,
           complete: (results) => {
             if (!results?.data) {
               console.log('No data available!')
             }
             console.log(results)
 
-            const headers = results.data[7].reduce((result, entry, index) => {
-              result[entry] = index
+            const getRowData = (row) => {
+              return {
+                timestamp: new Date(row[DataFields.Timestamp]),
+                transactionType: row[DataFields.TransactionType],
+                asset: row[DataFields.Asset],
+                quantity: row[DataFields.Quantity],
+                spotPrice: row[DataFields.SpotPrice],
+                total: row[DataFields.Total],
+                fees: row[DataFields.Fees]
+              }
+            }
+
+            const getDataSlice = (results) => {
+              for (let i = 0; i < results.data.length; i++) {
+                if (results.data[i][DataFields.Timestamp] === 'Timestamp') {
+                  return results.data.slice(i + 1)
+                }
+              }
+
+              return []
+            }
+
+            const data = getDataSlice(results).reduce((result, row) => {
+              if (!row[DataFields.TransactionType]) {
+                return result
+              }
+
+              const transactionType = row[DataFields.TransactionType].toLowerCase()
+              const asset = row[DataFields.Asset].toLowerCase()
+
+              if (!result[asset]) {
+                result[asset] = {}
+              }
+
+              if (!result[asset][transactionType]) {
+                result[asset][transactionType] = []
+              }
+
+              result[asset][transactionType].push(getRowData(row))
+
               return result
             }, {})
 
-            const dataIndexes = HEADERS.map((entry) => {
-              return headers[entry]
-            })
+            const withTax = Object.entries(data).reduce((result, entry) => {
+              const [symbol, data] = entry
 
-            const dataTable = {}
+              if (!data.buy || !data.sell) {
+                return result
+              }
 
-            results.data.slice(8).forEach((row) => {
+              const tax = []
 
-            })
+              const buyRowTracker = {
+                index: 0,
+                excess: 0,
+                total: 0,
+                quantity: 0
+              }
 
-            const getRowData = (row) => {
+              const sellRowTracker = {
+                index: 0,
+                excess: 0,
+                total: 0,
+                quantity: 0
+              }
 
-            }
+              while (true) {
+                if (buyRowTracker.quantity === 0) {
+                  buyRowTracker.index++
 
-            // Get relevant data
-            const data = results.data.slice(8).map((row) => {
-              return dataIndexes.map((index) => {
-                return row[index]
-              })
-            })
+                  if (!data.buy[buyRowTracker.index]) {
+                    break
+                  }
 
-            setData(data)
+                  buyRowTracker.quantity = data.buy[buyRowTracker.index].quantity
+                }
+
+                if (sellRowTracker.quantity === 0) {
+                  sellRowTracker.index++
+
+                  if (!data.sell[sellRowTracker.index]) {
+                    break
+                  }
+
+                  sellRowTracker.quantity = data.sell[sellRowTracker.index].quantity
+                }
+
+                if (buyRowTracker.quantity === sellRowTracker.quantity) {
+                  // const buyPrice = data.buy[buyRowTracker.index]
+                  // const sellPrice = 0
+
+                  // tax.push({
+                  //   timestamp: data.sell[sellRowTracker.index].timestamp,
+                  //   tax: data.buy[buyRowTracker.index]
+                  // })
+
+                  buyRowTracker.quantity = 0
+                  sellRowTracker.quantity = 0
+
+                  continue
+                }
+
+                if (buyRowTracker.quantity > sellRowTracker.quantity) {
+                  tax.push({})
+
+                  buyRowTracker.quantity - sellRowTracker.quantity
+                  sellRowTracker.quantity = 0
+
+                  continue
+                }
+
+                if (buyRowTracker.quantity < sellRowTracker.quantity) {
+                  tax.push({})
+
+                  sellRowTracker.quantity - buyRowTracker.quantity
+                  buyRowTracker.quantity = 0
+
+                  continue
+                }
+              }
+
+              result[symbol] = {
+                ...data,
+                tax
+              }
+
+              return result
+            }, {})
+
+            setData(withTax)
           }
         })
 
@@ -130,13 +263,13 @@ function App() {
     },
     []
   )
-
+  console.log(data)
   return (
     <Container>
       <Header>Crypto Tax</Header>
       <Content ref={fileDragArea}>
         <Query>{query}</Query>
-        <table>
+        {/* <table>
           <thead>
             <tr>
               <th>Currency</th>
@@ -151,27 +284,42 @@ function App() {
               </tr>
             ))}
           </tbody>
-        </table>
-        {data && (
-          <table>
-            <thead>
-              <tr>
-                {HEADERS.map((entry) => (
-                  <th key={entry}>{entry}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((row, i) => (
-                <tr key={i}>
-                  {row.map((column, j) => (
-                    <td key={j}>{column}</td>
+        </table> */}
+        {data && Object.entries(data).map((entry) => {
+          // console.log(entry)
+          const info = marketData?.[entry[0]]
+
+          return (
+            <React.Fragment key={entry[0]}>
+              {info && (
+                <InfoContainer>
+                  <img alt={info.symbol} src={info.image} width={20} height={20} />
+                  <span>{info.name}:</span>
+                  <span>{info.current_price}</span>
+                </InfoContainer>
+              )}
+              <DataTable>
+                <thead>
+                  <tr>
+                    {HEADERS.map((header) => (
+                      <th key={header}>{header}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {entry[1].buy?.map((entry, index) => (
+                    <tr key={index}>
+                      <td>{new Intl.DateTimeFormat('fi').format(entry.timestamp)}</td>
+                      <td>{entry.quantity}</td>
+                      <td>{entry.total}</td>
+                      <td>{entry.fees}</td>
+                    </tr>
                   ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+                </tbody>
+              </DataTable>
+            </React.Fragment>
+          )
+        })}
       </Content>
     </Container>
   )
