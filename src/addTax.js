@@ -17,6 +17,16 @@ export function getTax (profit) {
   return tax
 }
 
+function getTaxInfo (data, buyRowTracker, sellRowTracker) {
+  const buyPrice = buyRowTracker.quantity * data.buy[buyRowTracker.index].spotPrice
+  const sellPrice = sellRowTracker.quantity * data.sell[sellRowTracker.index].spotPrice
+
+  return {
+    timestamp: data.sell[sellRowTracker.index].timestamp,
+    tax: Math.max(0, (sellPrice - buyPrice) * TAX_RATE_LOW)
+  }
+}
+
 export default function addTax (data) {
   return Object.entries(data).reduce((result, entry) => {
     const [symbol, data] = entry
@@ -29,16 +39,12 @@ export default function addTax (data) {
 
     const buyRowTracker = {
       index: 0,
-      excess: 0,
-      total: 0,
-      quantity: 0
+      quantity: data.buy[0].quantity
     }
 
     const sellRowTracker = {
       index: 0,
-      excess: 0,
-      total: 0,
-      quantity: 0
+      quantity: data.sell[0].quantity
     }
 
     while (true) {
@@ -63,13 +69,14 @@ export default function addTax (data) {
       }
 
       if (buyRowTracker.quantity === sellRowTracker.quantity) {
-        // const buyPrice = data.buy[buyRowTracker.index]
-        // const sellPrice = 0
+        // const buyPrice = buyRowTracker.quantity * data.buy[buyRowTracker.index].spotPrice
+        // const sellPrice = sellRowTracker.quantity * data.sell[sellRowTracker.index].spotPrice
 
         // tax.push({
         //   timestamp: data.sell[sellRowTracker.index].timestamp,
-        //   tax: data.buy[buyRowTracker.index]
+        //   tax: Math.max(0, (sellPrice - buyPrice) * TAX_RATE_LOW)
         // })
+        tax.push(getTaxInfo(data, buyRowTracker, sellRowTracker))
 
         buyRowTracker.quantity = 0
         sellRowTracker.quantity = 0
@@ -78,7 +85,7 @@ export default function addTax (data) {
       }
 
       if (buyRowTracker.quantity > sellRowTracker.quantity) {
-        tax.push({})
+        tax.push(getTaxInfo(data, buyRowTracker, sellRowTracker))
 
         buyRowTracker.quantity =- sellRowTracker.quantity
         sellRowTracker.quantity = 0
@@ -87,7 +94,7 @@ export default function addTax (data) {
       }
 
       if (buyRowTracker.quantity < sellRowTracker.quantity) {
-        tax.push({})
+        tax.push(getTaxInfo(data, buyRowTracker, sellRowTracker))
 
         sellRowTracker.quantity =- buyRowTracker.quantity
         buyRowTracker.quantity = 0
