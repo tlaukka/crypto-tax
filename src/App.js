@@ -79,7 +79,6 @@ function App() {
         if (!file) {
           return false
         }
-        console.log(file)
 
         Papa.parse(file, {
           delimiter: ',',
@@ -88,8 +87,6 @@ function App() {
             if (!results?.data) {
               console.log('No data available!')
             }
-
-            console.log(results)
 
             const data = getTransactionData(results)
             setData(data)
@@ -101,69 +98,75 @@ function App() {
     },
     []
   )
-  console.log(data)
-  console.log(marketData)
+
+  function rendderDataTable () {
+    if (!marketData) {
+      return null
+    }
+
+    return (
+      <DataTable>
+        <thead>
+          <tr>
+            <th>Currency</th>
+            <th>Current Price</th>
+            <th>Quantity</th>
+            <th>Total Buy</th>
+            <th>Total Sell</th>
+            <th>Profit</th>
+            <th>Tax</th>
+            <th>Net</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data && Object.entries(data).map((entry) => {
+            const currency = entry[0]
+            const transaction = entry[1]
+            const currencyInfo = marketData[currency]
+
+            const buyData = transaction.buy?.reduce((result, entry) => {
+              result.quantity += entry.quantity
+              result.totalBuy += entry.quantity * entry.spotPrice
+
+              return result
+            }, {
+              quantity: 0,
+              totalBuy: 0
+            })
+
+            const totalSell = buyData.quantity * currencyInfo.current_price
+            const profit = totalSell - buyData.totalBuy
+            const tax = getTax(profit)
+            const net = totalSell - tax
+
+            return (
+              <tr>
+                <td>
+                  <InfoContainer>
+                    <img alt={currencyInfo.symbol} src={currencyInfo.image} width={20} height={20} />
+                    <span>{currencyInfo.name}</span>
+                  </InfoContainer>
+                </td>
+                <td>{RoundTo.currency().value(currencyInfo.current_price)}</td>
+                <td>{RoundTo.f8().value(buyData.quantity)}</td>
+                <td>{RoundTo.currency().value(buyData.totalBuy)}</td>
+                <td>{RoundTo.currency().value(totalSell)}</td>
+                <td>{RoundTo.currency().value(profit)}</td>
+                <td>{RoundTo.currency().value(tax)}</td>
+                <td>{RoundTo.currency().value(net)}</td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </DataTable>
+    )
+  }
+
   return (
     <Container>
       <Header>Crypto Tax</Header>
       <Content ref={fileDragArea}>
-        {marketData && Object.entries(marketData).map((entry) => {
-          const currency = entry[0]
-          const marketInfo = entry[1]
-          const currencyInfo = data?.[currency]
-
-          return (
-            <React.Fragment key={currency}>
-              <InfoContainer>
-                <img alt={marketInfo.symbol} src={marketInfo.image} width={20} height={20} />
-                <span>{marketInfo.name}:</span>
-                <span>{marketInfo.current_price}</span>
-              </InfoContainer>
-              {currencyInfo && (function () {
-                // QUANTITY | TOTAL BUY | TOTAL SELL | PROFIT | TAX | NET
-                const buyData = currencyInfo.buy?.reduce((result, entry) => {
-                  result.quantity += entry.quantity
-                  result.totalBuy += entry.quantity * entry.spotPrice
-
-                  return result
-                }, {
-                  quantity: 0,
-                  totalBuy: 0
-                })
-
-                const totalSell = buyData.quantity * marketInfo.current_price
-                const profit = totalSell - buyData.totalBuy
-                const tax = getTax(profit)
-                const net = totalSell - tax
-
-                return (
-                  <DataTable>
-                    <thead>
-                      <tr>
-                        <th>Quantity</th>
-                        <th>Total Buy</th>
-                        <th>Total Sell</th>
-                        <th>Profit</th>
-                        <th>Tax</th>
-                        <th>Net</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>{RoundTo.f8().value(buyData.quantity)}</td>
-                        <td>{RoundTo.currency().value(buyData.totalBuy)}</td>
-                        <td>{RoundTo.currency().value(totalSell)}</td>
-                        <td>{RoundTo.currency().value(profit)}</td>
-                        <td>{RoundTo.currency().value(tax)}</td>
-                        <td>{RoundTo.currency().value(net)}</td>
-                      </tr>
-                    </tbody>
-                  </DataTable>
-                )
-              }())}
-            </React.Fragment>
-          )
-        })}
+        {rendderDataTable()}
       </Content>
     </Container>
   )
