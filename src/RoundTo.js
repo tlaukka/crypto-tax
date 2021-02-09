@@ -24,7 +24,7 @@ const RoundTo = {
   result: 0,
   precision: DEFAULT_PRECISION,
   value: function (value) {
-    return Math.round((value + Number.EPSILON) * this.precision) / this.precision
+    return (Math.round((value + Number.EPSILON) * this.precision) / this.precision).toFixed(String(this.precision).length - 1)
   }
 }
 

@@ -13,42 +13,93 @@ import RoundTo from './RoundTo'
 //   'Fees'
 // ]
 
+const COLOR_FOREGROUND = '#DFE1E8'
+const COLOR_BACKGROUND_LIGHT = '#2B303B'
+const COLOR_BACKGROUND_DARK = '#21252B'
+const COLOR_BORDER = '#65737E'
+
 const Container = styled.div({
+  fontFamily: '"Trebuchet MS"',
   height: '100%',
-  padding: 12,
-  backgroundColor: '#2b2b2b'
+  padding: 16,
+  color: COLOR_FOREGROUND,
+  backgroundColor: COLOR_BACKGROUND_LIGHT
 })
 
 const Header = styled.h1({
   margin: '0 0 12px',
-  color: '#a1a1a1'
+  // color: COLOR_FOREGROUND
 })
 
 const Content = styled.div({
+  // height: '100vh'
   minHeight: 400,
-  color: '#a1a1a1'
+  // color: COLOR_FOREGROUND
 })
 
 const InfoContainer = styled.div({
   display: 'flex',
-  alignItems: 'center',
-  marginBottom: 8,
-  'span': {
-    marginLeft: 8
+  justifyContent: 'space-between',
+  'div:first-child': {
+    fontFamily: '"Trebuchet MS"',
+    fontSize: 18,
+    marginRight: 8
+  },
+  'img': {
+    position: 'relative',
+    bottom: -2,
+    verticalAlign: 'bottom',
+    marginRight: 12
+  },
+  'div.current-price': {
+    alignSelf: 'flex-end',
+  },
+
+
+
+  '*': {
+    // border: '1px solid gray'
   }
 })
 
 const DataTable = styled.table({
-  fontFamily: '"Lucida Console", Monaco, monospace',
   width: '100%',
   marginBottom: 24,
   borderCollapse: 'collapse',
   'thead':  {
-    textAlign: 'right'
+    fontSize: 20,
+    textAlign: 'right',
+    borderBottom: `3px solid ${COLOR_BORDER}`
   },
   'tbody':{
-    textAlign: 'right',
-    backgroundColor: '#1f1f1f'
+    fontFamily: '"Lucida Console", Monaco, monospace',
+    textAlign: 'right'
+  },
+  'tr': {
+    borderBottom: `1px solid ${COLOR_BORDER}`
+  },
+  'th': {
+    padding: '8px 16px'
+  },
+  'th.profit': {
+    color: '#8FA1B3'
+  },
+  'th.tax': {
+    color: '#B9616A'
+  },
+  'th.net': {
+    color: '#9DBE8C'
+  },
+  'td': {
+    verticalAlign: 'bottom',
+    height: 40,
+    padding: '12px 16px'
+  },
+  'td.currency': {
+    borderRight: `1px solid ${COLOR_BORDER}`
+  },
+  'td.total-sell': {
+    borderRight: `1px dashed ${COLOR_BORDER}`
   }
 })
 
@@ -108,14 +159,14 @@ function App() {
       <DataTable>
         <thead>
           <tr>
-            <th>Currency</th>
-            <th>Current Price</th>
+            <th />
+            {/* <th /> */}
             <th>Quantity</th>
             <th>Total Buy</th>
             <th>Total Sell</th>
-            <th>Profit</th>
-            <th>Tax</th>
-            <th>Net</th>
+            <th className={'profit'}>Profit</th>
+            <th className={'tax'}>Tax</th>
+            <th className={'net'}>Net</th>
           </tr>
         </thead>
         <tbody>
@@ -140,17 +191,26 @@ function App() {
             const net = totalSell - tax
 
             return (
-              <tr>
-                <td>
+              <tr key={currency}>
+                {/* <td>
                   <InfoContainer>
                     <img alt={currencyInfo.symbol} src={currencyInfo.image} width={20} height={20} />
                     <span>{currencyInfo.name}</span>
                   </InfoContainer>
                 </td>
-                <td>{RoundTo.currency().value(currencyInfo.current_price)}</td>
+                <td className={'currency'}>{RoundTo.currency().value(currencyInfo.current_price)}</td> */}
+                <td className={'currency'}>
+                  <InfoContainer>
+                    <div>
+                      <img alt={currencyInfo.symbol} src={currencyInfo.image} width={24} height={24} />
+                      <span>{currencyInfo.name}:</span>
+                    </div>
+                    <div className={'current-price'}>{RoundTo.currency().value(currencyInfo.current_price)}</div>
+                  </InfoContainer>
+                </td>
                 <td>{RoundTo.f8().value(buyData.quantity)}</td>
                 <td>{RoundTo.currency().value(buyData.totalBuy)}</td>
-                <td>{RoundTo.currency().value(totalSell)}</td>
+                <td className={'total-sell'}>{RoundTo.currency().value(totalSell)}</td>
                 <td>{RoundTo.currency().value(profit)}</td>
                 <td>{RoundTo.currency().value(tax)}</td>
                 <td>{RoundTo.currency().value(net)}</td>
