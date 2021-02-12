@@ -10,7 +10,18 @@ const queryParams = {
 
 const query = `${CRYPTO_QUERY_URL}?${qs.stringify(queryParams, { arrayFormat: 'comma' })}`
 
-export default function useCryptoMarketData () {
+function getMarketData (result, entry) {
+  result[entry.symbol] = {
+    symbol: entry.symbol,
+    name: entry.name,
+    image: entry.image,
+    currentPrice: entry.current_price
+  }
+
+  return result
+}
+
+export default function useCryptoMarketData (refreshRate = 60000) {
   const [marketData, setMarketData] = React.useState()
   const [fetching, setFetching] = React.useState(false)
   const [error, setError] = React.useState()
@@ -30,19 +41,23 @@ export default function useCryptoMarketData () {
         }
 
         const data = await response.json()
-
-        const marketData = data.reduce((result, entry) => {
-          result[entry.symbol] = entry
-          return result
-        }, {})
+        const marketData = data.reduce(getMarketData, {})
 
         setMarketData(marketData)
         setFetching(false)
       }
 
       fetchMarketData()
+
+      const interval = setInterval(() => {
+        fetchMarketData()
+      }, refreshRate)
+
+      return () => {
+        clearInterval(interval)
+      }
     },
-    []
+    [refreshRate]
   )
 
   return {

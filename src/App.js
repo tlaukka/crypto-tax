@@ -1,17 +1,11 @@
 import React from 'react'
 import styled from '@emotion/styled'
-import Papa from 'papaparse'
-import getTransactionData from './getTransactionData'
+import fs from 'fs'
 import useCryptoMarketData from './useCryptoMarketData'
-import { getTax } from './addTax'
 import RoundTo from './RoundTo'
-
-// const HEADERS = [
-//   'Timestamp',
-//   'Quantity',
-//   'Total',
-//   'Fees'
-// ]
+import parseTransactionData from './parseTransactionData'
+import useTransactionData from './useTransactionData'
+import useSummaryData from './useSummaryData'
 
 const COLOR_FOREGROUND = '#DFE1E8'
 const COLOR_BACKGROUND_LIGHT = '#2B303B'
@@ -20,18 +14,18 @@ const COLOR_BORDER = '#65737E'
 
 const Container = styled.div({
   fontFamily: '"Trebuchet MS"',
-  height: '100%',
-  padding: 16,
+  height: '100vh',
   color: COLOR_FOREGROUND,
   backgroundColor: COLOR_BACKGROUND_LIGHT
 })
 
 const Header = styled.h1({
-  margin: '0 0 12px'
+  margin: '0 0 24px'
 })
 
 const Content = styled.div({
-  minHeight: 400
+  minHeight: 400,
+  padding: '16px 16px 48px'
 })
 
 const InfoContainer = styled.div({
@@ -53,16 +47,48 @@ const InfoContainer = styled.div({
   }
 })
 
-const DataTable = styled.table({
+const SummaryTable = styled.table({
+  borderCollapse: 'collapse',
+  fontSize: 16,
+  marginBottom: 24,
+  'tr.profit': {
+    borderTop: `1px solid ${COLOR_BORDER}`,
+    color: '#8FA1B3'
+  },
+  'tr > td:first-of-type': {
+    fontFamily: '"Trebuchet MS"',
+    textAlign: 'left',
+    padding: '2px 12px 2px 2px'
+  },
+  'tr.total-sell td': {
+    paddingBottom: 4
+  },
+  'tr.profit td': {
+    paddingTop: 12
+  },
+  'tr.tax': {
+    color: '#B9616A'
+  },
+  'tr.net': {
+    color: '#9DBE8C'
+  },
+  'td': {
+    fontFamily: '"Lucida Console", Monaco, monospace',
+    textAlign: 'right',
+    padding: '2px 2px 2px 2px'
+  }
+})
+
+const TransactionTable = styled.table({
+  borderCollapse: 'collapse',
   width: '100%',
   marginBottom: 24,
-  borderCollapse: 'collapse',
-  'thead':  {
+  'thead': {
     fontSize: 20,
     textAlign: 'right',
     borderBottom: `3px solid ${COLOR_BORDER}`
   },
-  'tbody':{
+  'tbody': {
     fontFamily: '"Lucida Console", Monaco, monospace',
     fontSize: 15,
     textAlign: 'right'
@@ -100,79 +126,32 @@ function App() {
   const [data, setData] = React.useState()
 
   const { marketData } = useCryptoMarketData()
-
-  const transactionData = React.useMemo(
-    () => {
-      const currencyInfo = Object.values(marketData || {}).reduce((result, entry) => {
-        result[entry.symbol] = {
-          symbol: entry.symbol,
-          name: entry.name,
-          image: entry.image,
-          // currentPrice: RoundTo.currency().value(entry.current_price)
-          currentPrice: entry.current_price
-        }
-
-        return result
-      }, {})
-
-      const transactions = Object.entries(data || {}).map(([currencySymbol, transaction]) => {
-        const currency = currencyInfo[currencySymbol]
-
-        const { quantity, totalBuy } = Object.values(transaction.buy || []).reduce((result, entry) => {
-          result.quantity += entry.quantity
-          result.totalBuy += entry.quantity * entry.spotPrice
-
-          return result
-        }, {
-          quantity: 0,
-          totalBuy: 0
-        })
-
-        const totalSell = quantity * currency.currentPrice
-        const profit = totalSell - totalBuy
-        const tax = getTax(profit)
-        const net = totalSell - tax
-
-        return {
-          currencySymbol,
-          quantity,
-          totalBuy,
-          totalSell,
-          profit,
-          tax,
-          net
-          // quantity: RoundTo.f8().value(quantity),
-          // totalBuy: RoundTo.currency().value(totalBuy),
-          // totalSell: RoundTo.currency().value(totalSell),
-          // profit: RoundTo.currency().value(profit),
-          // tax: RoundTo.currency().value(tax),
-          // net: RoundTo.currency().value(net)
-        }
-      })
-
-      return {
-        currencyInfo,
-        transactions
-      }
-    },
-    [data, marketData]
-  )
-
-  console.log(transactionData)
+  const transactionData = useTransactionData(marketData, data)
+  const summaryData = useSummaryData(transactionData)
 
   React.useEffect(
     () => {
-      fileDragArea.current.ondragover = () => {
-        return false
+      async function getTransactionData() {
+        const path = localStorage.getItem('path')
+
+        if (path) {
+          const file = fs.createReadStream(path)
+          const data = await parseTransactionData(file)
+
+          setData(data)
+        }
       }
 
-      fileDragArea.current.ondragleave = () => {
-        return false
-      }
+      getTransactionData()
+    },
+    []
+  )
 
-      fileDragArea.current.ondragend = () => {
-        return false
-      }
+  React.useEffect(
+    () => {
+      fileDragArea.current.ondragover = () => false
+      fileDragArea.current.ondragleave = () => false
+      fileDragArea.current.ondragend = () => false
 
       fileDragArea.current.ondrop = (e) => {
         e.preventDefault()
@@ -182,55 +161,54 @@ function App() {
           return false
         }
 
-        Papa.parse(file, {
-          delimiter: ',',
-          dynamicTyping: true,
-          complete: (results) => {
-            if (!results?.data) {
-              console.log('No data available!')
-            }
+        async function getTransactionData() {
+          const data = await parseTransactionData(file)
+          setData(data)
+        }
 
-            const data = getTransactionData(results)
-            setData(data)
-          }
-        })
-
+        getTransactionData()
         return false
       }
     },
     []
   )
 
-  function renderSummary () {
-    const { totalBuy, totalSell } = transactionData.transactions.reduce((result, transaction) => {
-      // const currency = transactionData.currencyInfo[transaction.currencySymbol]
-      result.totalBuy += transaction.totalBuy
-      result.totalSell += transaction.totalSell
-
-      return result
-    }, {
-      totalBuy: 0,
-      totalSell: 0
-    })
-
-    const profit = totalSell - totalBuy
-    const tax = getTax(profit)
-    const net = totalSell - tax
+  function renderSummary() {
+    if (!summaryData) {
+      return null
+    }
 
     return (
-      <div>
-        <div>{totalBuy}</div>
-        <div>{totalSell}</div>
-        <div>{profit}</div>
-        <div>{tax}</div>
-        <div>{net}</div>
-      </div>
+      <SummaryTable>
+        <tbody>
+          <tr>
+            <td>Total Buy:</td>
+            <td>{RoundTo.currency().value(summaryData.totalBuy)}</td>
+          </tr>
+          <tr className={'total-sell'}>
+            <td>Total Sell:</td>
+            <td>{RoundTo.currency().value(summaryData.totalSell)}</td>
+          </tr>
+          <tr className={'profit'}>
+            <td>Profit:</td>
+            <td>{RoundTo.currency().value(summaryData.profit)}</td>
+          </tr>
+          <tr className={'tax'}>
+            <td>Tax:</td>
+            <td>{RoundTo.currency().value(summaryData.tax)}</td>
+          </tr>
+          <tr className={'net'}>
+            <td>Net:</td>
+            <td>{RoundTo.currency().value(summaryData.net)}</td>
+          </tr>
+        </tbody>
+      </SummaryTable>
     )
   }
 
-  function rendderDataTable () {
+  function rendderTransactionTable() {
     return (
-      <DataTable>
+      <TransactionTable>
         <thead>
           <tr>
             <th />
@@ -243,8 +221,8 @@ function App() {
           </tr>
         </thead>
         <tbody>
-          {transactionData.transactions.map((transaction) => {
-            const currency = transactionData.currencyInfo[transaction.currencySymbol]
+          {transactionData.map((transaction) => {
+            const currency = marketData[transaction.currencySymbol]
 
             return (
               <tr key={currency.symbol}>
@@ -267,16 +245,16 @@ function App() {
             )
           })}
         </tbody>
-      </DataTable>
+      </TransactionTable>
     )
   }
 
   return (
     <Container>
-      <Header>Crypto Tax</Header>
       <Content ref={fileDragArea}>
+        <Header>Crypto Tax</Header>
         {renderSummary()}
-        {rendderDataTable()}
+        {rendderTransactionTable()}
       </Content>
     </Container>
   )
