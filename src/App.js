@@ -13,8 +13,7 @@ const COLOR_BACKGROUND_LIGHT = '#2B303B'
 const COLOR_BORDER = '#65737E'
 
 const Container = styled.div({
-  fontFamily: '"Trebuchet MS"',
-  height: '100vh',
+  height: '100%',
   color: COLOR_FOREGROUND,
   backgroundColor: COLOR_BACKGROUND_LIGHT
 })
@@ -250,8 +249,8 @@ function App() {
   }
 
   return (
-    <Container>
-      <Content ref={fileDragArea}>
+    <Container ref={fileDragArea}>
+      <Content>
         <Header>Crypto Tax</Header>
         {renderSummary()}
         {rendderTransactionTable()}
