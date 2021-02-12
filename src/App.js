@@ -50,10 +50,6 @@ const SummaryTable = styled.table({
   borderCollapse: 'collapse',
   fontSize: 16,
   marginBottom: 24,
-  'tr.profit': {
-    borderTop: `1px solid ${COLOR_BORDER}`,
-    color: '#8FA1B3'
-  },
   'tr > td:first-of-type': {
     fontFamily: '"Trebuchet MS"',
     textAlign: 'left',
@@ -62,6 +58,10 @@ const SummaryTable = styled.table({
   'tr.total-sell td': {
     paddingBottom: 4
   },
+  'tr.profit': {
+    borderTop: `1px solid ${COLOR_BORDER}`,
+    color: '#8FA1B3'
+  },
   'tr.profit td': {
     paddingTop: 12
   },
@@ -69,6 +69,7 @@ const SummaryTable = styled.table({
     color: '#B9616A'
   },
   'tr.net': {
+    fontSize: 22,
     color: '#9DBE8C'
   },
   'td': {
@@ -120,6 +121,16 @@ const TransactionTable = styled.table({
   }
 })
 
+const TransactionEmpty = styled('div')({
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  height: 200,
+  borderRadius: 4,
+  border: `1px dashed ${COLOR_BORDER}`,
+  color: COLOR_BORDER
+})
+
 function App() {
   const fileDragArea = React.useRef()
   const [data, setData] = React.useState()
@@ -131,7 +142,7 @@ function App() {
   React.useEffect(
     () => {
       async function getTransactionData() {
-        const path = localStorage.getItem('path')
+        const path = localStorage.getItem('path_')
 
         if (path) {
           const file = fs.createReadStream(path)
@@ -205,7 +216,15 @@ function App() {
     )
   }
 
-  function rendderTransactionTable() {
+  function renderTransactionTable() {
+    if (transactionData.length === 0) {
+      return (
+        <TransactionEmpty>
+          <h3>No data available!</h3>
+        </TransactionEmpty>
+      )
+    }
+
     return (
       <TransactionTable>
         <thead>
@@ -253,7 +272,7 @@ function App() {
       <Content>
         <Header>Crypto Tax</Header>
         {renderSummary()}
-        {rendderTransactionTable()}
+        {renderTransactionTable()}
       </Content>
     </Container>
   )
