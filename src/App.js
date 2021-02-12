@@ -9,7 +9,7 @@ import useSummaryData from './useSummaryData'
 
 const COLOR_FOREGROUND = '#DFE1E8'
 const COLOR_BACKGROUND_LIGHT = '#2B303B'
-// const COLOR_BACKGROUND_DARK = '#21252B'
+const COLOR_BACKGROUND_DARK = '#21252B'
 const COLOR_BORDER = '#65737E'
 
 const Container = styled.div({
@@ -19,12 +19,14 @@ const Container = styled.div({
 })
 
 const Header = styled.h1({
-  margin: '0 0 24px'
+  margin: '0 0 24px',
+  paddingBottom: 8,
+  borderBottom: `3px solid ${COLOR_BORDER}`
 })
 
 const Content = styled.div({
   minHeight: 400,
-  padding: '16px 16px 48px'
+  padding: '16px 16px 32px'
 })
 
 const InfoContainer = styled.div({
@@ -142,7 +144,7 @@ function App() {
   React.useEffect(
     () => {
       async function getTransactionData() {
-        const path = localStorage.getItem('path_')
+        const path = localStorage.getItem('path')
 
         if (path) {
           const file = fs.createReadStream(path)
