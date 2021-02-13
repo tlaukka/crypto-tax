@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "main": "public/electron.js",
   "homepage": "./",
+  "author": {
+    "name": "Teemu Laukka"
+  },
+  "description": "Crypto tax utility",
   "private": true,
   "dependencies": {
     "@craco/craco": "^6.1.1",
@@ -63,7 +67,8 @@
   "config": {
     "forge": {
       "packagerConfig": {
-        "name": "Crypto Tax"
+        "name": "Crypto Tax",
+        "asar": true
       },
       "makers": [
         {
