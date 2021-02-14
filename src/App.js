@@ -6,22 +6,19 @@ import RoundTo from './RoundTo'
 import parseTransactionData from './parseTransactionData'
 import useTransactionData from './useTransactionData'
 import useSummaryData from './useSummaryData'
-
-const COLOR_FOREGROUND = '#DFE1E8'
-const COLOR_BACKGROUND_LIGHT = '#2B303B'
-const COLOR_BACKGROUND_DARK = '#21252B'
-const COLOR_BORDER = '#65737E'
+import Colors from './Colors'
+import storage from './storage'
 
 const Container = styled.div({
   height: '100%',
-  color: COLOR_FOREGROUND,
-  backgroundColor: COLOR_BACKGROUND_LIGHT
+  color: Colors.foreground,
+  backgroundColor: Colors.backgroundLight
 })
 
 const Header = styled.h1({
   margin: '0 0 24px',
   paddingBottom: 8,
-  borderBottom: `3px solid ${COLOR_BORDER}`
+  borderBottom: `3px solid ${Colors.border}`
 })
 
 const Content = styled.div({
@@ -61,7 +58,7 @@ const SummaryTable = styled.table({
     paddingBottom: 4
   },
   'tr.profit': {
-    borderTop: `1px solid ${COLOR_BORDER}`,
+    borderTop: `1px solid ${Colors.border}`,
     color: '#8FA1B3'
   },
   'tr.profit td': {
@@ -88,7 +85,7 @@ const TransactionTable = styled.table({
   'thead': {
     fontSize: 20,
     textAlign: 'right',
-    borderBottom: `3px solid ${COLOR_BORDER}`
+    borderBottom: `3px solid ${Colors.border}`
   },
   'tbody': {
     fontFamily: '"Lucida Console", Monaco, monospace',
@@ -96,7 +93,7 @@ const TransactionTable = styled.table({
     textAlign: 'right'
   },
   'tr': {
-    borderBottom: `1px solid ${COLOR_BORDER}`
+    borderBottom: `1px solid ${Colors.border}`
   },
   'th': {
     padding: '8px 16px'
@@ -116,10 +113,10 @@ const TransactionTable = styled.table({
     padding: '12px 16px'
   },
   'td.currency': {
-    borderRight: `1px solid ${COLOR_BORDER}`
+    borderRight: `1px solid ${Colors.border}`
   },
   'td.total-sell': {
-    borderRight: `1px solid ${COLOR_BORDER}`
+    borderRight: `1px solid ${Colors.border}`
   }
 })
 
@@ -129,8 +126,8 @@ const TransactionEmpty = styled('div')({
   alignItems: 'center',
   height: 200,
   borderRadius: 4,
-  border: `1px dashed ${COLOR_BORDER}`,
-  color: COLOR_BORDER
+  border: `1px dashed ${Colors.border}`,
+  color: Colors.border
 })
 
 function App() {
@@ -144,13 +141,19 @@ function App() {
   React.useEffect(
     () => {
       async function getTransactionData() {
-        const path = localStorage.getItem('path')
+        try {
+          await storage.load()
+          const path = storage.get('transactionFilePath')
 
-        if (path) {
-          const file = fs.createReadStream(path)
-          const data = await parseTransactionData(file)
+          if (path) {
+            const file = fs.createReadStream(path)
+            const data = await parseTransactionData(file)
 
-          setData(data)
+            file.close()
+            setData(data)
+          }
+        } catch (error) {
+          alert(error)
         }
       }
 
@@ -170,12 +173,19 @@ function App() {
         const file = e.dataTransfer.files[0]
 
         if (!file) {
+          alert('Invalid file!')
           return false
         }
 
         async function getTransactionData() {
-          const data = await parseTransactionData(file)
-          setData(data)
+          try {
+            const data = await parseTransactionData(file)
+            setData(data)
+
+            storage.save('transactionFilePath', file.path)
+          } catch (error) {
+            alert(error)
+          }
         }
 
         getTransactionData()
@@ -270,13 +280,15 @@ function App() {
   }
 
   return (
-    <Container ref={fileDragArea}>
-      <Content>
-        <Header>Crypto Tax</Header>
-        {renderSummary()}
-        {renderTransactionTable()}
-      </Content>
-    </Container>
+    <>
+      <Container ref={fileDragArea}>
+        <Content>
+          <Header>Crypto Tax</Header>
+          {renderSummary()}
+          {renderTransactionTable()}
+        </Content>
+      </Container>
+    </>
   )
 }
 

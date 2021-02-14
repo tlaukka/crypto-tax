@@ -8,8 +8,7 @@ export default function parseTransactionData (file) {
       dynamicTyping: true,
       complete: (results) => {
         if (!results?.data) {
-          console.log('No data available!')
-          return reject()
+          return reject('No data available!')
         }
 
         return resolve(getTransactionData(results))
