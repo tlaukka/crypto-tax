@@ -3,12 +3,21 @@ import ReactDOM from 'react-dom'
 import './index.css'
 import App from './App'
 import reportWebVitals from './reportWebVitals'
+import StorageProvider from './storage'
 
 // https://dev.to/mandiwise/electron-apps-made-easy-with-create-react-app-and-electron-forge-560e
 
+function RootContainer () {
+  return (
+    <StorageProvider>
+      <App />
+    </StorageProvider>
+  )
+}
+
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <RootContainer />
   </React.StrictMode>,
   document.getElementById('root')
 )

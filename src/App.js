@@ -7,7 +7,7 @@ import parseTransactionData from './parseTransactionData'
 import useTransactionData from './useTransactionData'
 import useSummaryData from './useSummaryData'
 import Colors from './Colors'
-import storage from './storage'
+import { useStorage } from './storage'
 
 const Container = styled.div({
   height: '100%',
@@ -131,6 +131,8 @@ const TransactionEmpty = styled('div')({
 })
 
 function App() {
+  const storage = useStorage()
+
   const fileDragArea = React.useRef()
   const [data, setData] = React.useState()
 
@@ -142,8 +144,7 @@ function App() {
     () => {
       async function getTransactionData() {
         try {
-          await storage.load()
-          const path = storage.get('transactionFilePath')
+          const path = storage.getValue('transactionFilePath')
 
           if (path) {
             const file = fs.createReadStream(path)
@@ -159,7 +160,7 @@ function App() {
 
       getTransactionData()
     },
-    []
+    [storage]
   )
 
   React.useEffect(
@@ -182,7 +183,7 @@ function App() {
             const data = await parseTransactionData(file)
             setData(data)
 
-            storage.save('transactionFilePath', file.path)
+            storage.setValue('transactionFilePath', file.path)
           } catch (error) {
             alert(error)
           }
@@ -192,7 +193,7 @@ function App() {
         return false
       }
     },
-    []
+    [storage]
   )
 
   function renderSummary() {
