@@ -1,6 +1,6 @@
 {
   "name": "crypto-tax",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "main": "public/electron.js",
   "homepage": "./",
   "author": {
@@ -68,6 +68,7 @@
     "forge": {
       "packagerConfig": {
         "name": "Crypto Tax",
+        "icon": "icons/win/icon.ico",
         "asar": true
       },
       "makers": [

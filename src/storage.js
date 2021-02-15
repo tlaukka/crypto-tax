@@ -37,6 +37,7 @@ async function load () {
       // Create an empty storage file if it doesn't exist
       await writeFile(STORAGE_FILE, JSON.stringify({}))
       const data = await load()
+
       return data
     }
   }
@@ -44,9 +45,7 @@ async function load () {
 
 async function save (data) {
   try {
-    console.log('-------- saving -------->')
-    console.log(data)
-    await writeFile(STORAGE_FILE, JSON.stringify(data))
+    writeFile(STORAGE_FILE, JSON.stringify(data))
   } catch (error) {
     console.log(error)
   }
