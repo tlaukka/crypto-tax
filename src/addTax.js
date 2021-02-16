@@ -1,6 +1,7 @@
 export const TAX_RATE_HIGH = 0.34
 export const TAX_RATE_LOW = 0.3
 export const TAX_RATE_HIGH_LIMIT = 30000
+export const WITH_COINBASE_FEE = 0.9851
 
 export function getTax (profit) {
   let tax = 0
@@ -15,6 +16,10 @@ export function getTax (profit) {
   }
 
   return tax
+}
+
+export function withCoinbaseFee (value) {
+  return value * WITH_COINBASE_FEE
 }
 
 function getTaxInfo (data, buyRowTracker, sellRowTracker) {

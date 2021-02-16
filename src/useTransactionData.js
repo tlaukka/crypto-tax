@@ -1,4 +1,4 @@
-import { getTax } from "./addTax"
+import { getTax, withCoinbaseFee } from "./addTax"
 
 export default function useTransactionData (marketData, transactionData) {
   if (!marketData || !transactionData) {
@@ -18,7 +18,7 @@ export default function useTransactionData (marketData, transactionData) {
       totalBuy: 0
     })
 
-    const totalSell = quantity * currency.currentPrice
+    const totalSell = withCoinbaseFee(quantity * currency.currentPrice)
     const profit = totalSell - totalBuy
     const tax = getTax(profit)
     const net = totalSell - tax

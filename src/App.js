@@ -8,6 +8,7 @@ import useTransactionData from './useTransactionData'
 import useSummaryData from './useSummaryData'
 import Colors from './Colors'
 import { useStorage } from './storage'
+import format from './format'
 
 const Container = styled.div({
   height: '100%',
@@ -206,23 +207,23 @@ function App() {
         <tbody>
           <tr>
             <td>Total Buy:</td>
-            <td>{RoundTo.currency().value(summaryData.totalBuy)}</td>
+            <td>{format.currency(summaryData.totalBuy).symbol().value}</td>
           </tr>
           <tr className={'total-sell'}>
             <td>Total Sell:</td>
-            <td>{RoundTo.currency().value(summaryData.totalSell)}</td>
+            <td>{format.currency(summaryData.totalSell).symbol().value}</td>
           </tr>
           <tr className={'profit'}>
             <td>Profit:</td>
-            <td>{RoundTo.currency().value(summaryData.profit)}</td>
+            <td>{format.currency(summaryData.profit).symbol().value}</td>
           </tr>
           <tr className={'tax'}>
             <td>Tax:</td>
-            <td>{RoundTo.currency().value(summaryData.tax)}</td>
+            <td>{format.currency(summaryData.tax).symbol().value}</td>
           </tr>
           <tr className={'net'}>
             <td>Net:</td>
-            <td>{RoundTo.currency().value(summaryData.net)}</td>
+            <td>{format.currency(summaryData.net).symbol().value}</td>
           </tr>
         </tbody>
       </SummaryTable>
@@ -263,15 +264,15 @@ function App() {
                       <img alt={currency.symbol} src={currency.image} width={24} height={24} />
                       <span>{currency.name}:</span>
                     </div>
-                    <div className={'current-price'}>{RoundTo.currency().value(currency.currentPrice)}</div>
+                    <div className={'current-price'}>{format.currency(currency.currentPrice).value}</div>
                   </InfoContainer>
                 </td>
                 <td>{RoundTo.f8().value(transaction.quantity)}</td>
-                <td>{RoundTo.currency().value(transaction.totalBuy)}</td>
-                <td className={'total-sell'}>{RoundTo.currency().value(transaction.totalSell)}</td>
-                <td>{RoundTo.currency().value(transaction.profit)}</td>
-                <td>{RoundTo.currency().value(transaction.tax)}</td>
-                <td>{RoundTo.currency().value(transaction.net)}</td>
+                <td>{format.currency(transaction.totalBuy).value}</td>
+                <td className={'total-sell'}>{format.currency(transaction.totalSell).value}</td>
+                <td>{format.currency(transaction.profit).value}</td>
+                <td>{format.currency(transaction.tax).value}</td>
+                <td>{format.currency(transaction.net).value}</td>
               </tr>
             )
           })}
