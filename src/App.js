@@ -2,7 +2,6 @@ import React from 'react'
 import styled from '@emotion/styled'
 import fs from 'fs'
 import useCryptoMarketData from './useCryptoMarketData'
-import RoundTo from './RoundTo'
 import parseTransactionData from './parseTransactionData'
 import useTransactionData from './useTransactionData'
 import useSummaryData from './useSummaryData'
@@ -43,6 +42,7 @@ const InfoContainer = styled.div({
   },
   'div.current-price': {
     alignSelf: 'flex-end',
+    color: '#EBCB8B'
   }
 })
 
@@ -116,6 +116,9 @@ const TransactionTable = styled.table({
   'td.currency': {
     borderRight: `1px solid ${Colors.border}`
   },
+  // 'td.currency.price': {
+  //   color: '#EBCB8B'
+  // },
   'td.total-sell': {
     borderRight: `1px solid ${Colors.border}`
   }
@@ -267,7 +270,7 @@ function App() {
                     <div className={'current-price'}>{format.currency(currency.currentPrice).value}</div>
                   </InfoContainer>
                 </td>
-                <td>{RoundTo.f8().value(transaction.quantity)}</td>
+                <td>{transaction.quantity.toFixed(8)}</td>
                 <td>{format.currency(transaction.totalBuy).value}</td>
                 <td className={'total-sell'}>{format.currency(transaction.totalSell).value}</td>
                 <td>{format.currency(transaction.profit).value}</td>
