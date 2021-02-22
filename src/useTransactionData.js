@@ -1,12 +1,12 @@
 import { getTax, withCoinbaseFee } from "./addTax"
 
 export default function useTransactionData (marketData, transactionData) {
-  if (!marketData || !transactionData) {
+  if (!transactionData) {
     return []
   }
 
   return Object.entries(transactionData).map(([currencySymbol, transaction]) => {
-    const currency = marketData[currencySymbol]
+    const currentPrice = marketData?.[currencySymbol]?.currentPrice || 0
 
     const { quantity, totalBuy } = Object.values(transaction.buy || []).reduce((result, entry) => {
       result.quantity += entry.quantity
@@ -18,7 +18,7 @@ export default function useTransactionData (marketData, transactionData) {
       totalBuy: 0
     })
 
-    const totalSell = withCoinbaseFee(quantity * currency.currentPrice)
+    const totalSell = withCoinbaseFee(quantity * currentPrice)
     const profit = totalSell - totalBuy
     const tax = getTax(profit)
     const net = totalSell - tax

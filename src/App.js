@@ -8,6 +8,7 @@ import useSummaryData from './useSummaryData'
 import Colors from './Colors'
 import { useStorage } from './storage'
 import format from './format'
+import Loader from './Loader'
 
 const Container = styled.div({
   height: '100%',
@@ -15,10 +16,17 @@ const Container = styled.div({
   backgroundColor: Colors.backgroundLight
 })
 
-const Header = styled.h1({
-  margin: '0 0 24px',
+const TopBar = styled.div({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: 24,
   paddingBottom: 8,
   borderBottom: `3px solid ${Colors.border}`
+})
+
+const Header = styled.h1({
+  margin: 0
 })
 
 const Content = styled.div({
@@ -116,9 +124,6 @@ const TransactionTable = styled.table({
   'td.currency': {
     borderRight: `1px solid ${Colors.border}`
   },
-  // 'td.currency.price': {
-  //   color: '#EBCB8B'
-  // },
   'td.total-sell': {
     borderRight: `1px solid ${Colors.border}`
   }
@@ -140,7 +145,7 @@ function App() {
   const fileDragArea = React.useRef()
   const [data, setData] = React.useState()
 
-  const { marketData } = useCryptoMarketData()
+  const { marketData, fetching: fetchingMarketData } = useCryptoMarketData()
   const transactionData = useTransactionData(marketData, data)
   const summaryData = useSummaryData(transactionData)
 
@@ -233,11 +238,37 @@ function App() {
     )
   }
 
+  function renderMarketData (transaction) {
+    const currency = marketData?.[transaction.currencySymbol]
+
+    if (!currency) {
+      return (
+        <InfoContainer>
+          <span>No market data!</span>
+        </InfoContainer>
+      )
+    }
+
+    return (
+      <InfoContainer>
+        <div>
+          <img alt={currency.symbol} src={currency.image} width={24} height={24} />
+          <span>{currency.name}:</span>
+        </div>
+        <div className={'current-price'}>{format.currency(currency.currentPrice).value}</div>
+      </InfoContainer>
+    )
+  }
+
   function renderTransactionTable() {
     if (transactionData.length === 0) {
       return (
         <TransactionEmpty>
-          <h3>No data available!</h3>
+          {fetchingMarketData ? (
+            <Loader.Large type={'ThreeDots'} />
+          ) : (
+            <h3>No data available!</h3>
+          )}
         </TransactionEmpty>
       )
     }
@@ -256,19 +287,11 @@ function App() {
           </tr>
         </thead>
         <tbody>
-          {transactionData.map((transaction) => {
-            const currency = marketData[transaction.currencySymbol]
-
+        {transactionData.map((transaction) => {
             return (
-              <tr key={currency.symbol}>
+              <tr key={transaction.currencySymbol}>
                 <td className={'currency'}>
-                  <InfoContainer>
-                    <div>
-                      <img alt={currency.symbol} src={currency.image} width={24} height={24} />
-                      <span>{currency.name}:</span>
-                    </div>
-                    <div className={'current-price'}>{format.currency(currency.currentPrice).value}</div>
-                  </InfoContainer>
+                  {renderMarketData(transaction)}
                 </td>
                 <td>{transaction.quantity.toFixed(8)}</td>
                 <td>{format.currency(transaction.totalBuy).value}</td>
@@ -285,15 +308,16 @@ function App() {
   }
 
   return (
-    <>
-      <Container ref={fileDragArea}>
-        <Content>
+    <Container ref={fileDragArea}>
+      <Content>
+        <TopBar>
           <Header>Crypto Tax</Header>
-          {renderSummary()}
-          {renderTransactionTable()}
-        </Content>
-      </Container>
-    </>
+          {fetchingMarketData && <Loader.Small />}
+        </TopBar>
+        {renderSummary()}
+        {renderTransactionTable()}
+      </Content>
+    </Container>
   )
 }
 

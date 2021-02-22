@@ -15,7 +15,9 @@ function getMarketData (result, entry) {
     symbol: entry.symbol,
     name: entry.name,
     image: entry.image,
-    currentPrice: entry.current_price
+    currentPrice: entry.current_price,
+    priceChange24H: entry.price_change_24h,
+    priceChangePercentage24H: entry.price_change_percentage_24h
   }
 
   return result
