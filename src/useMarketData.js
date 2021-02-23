@@ -1,14 +1,7 @@
 import React from 'react'
 import qs from 'qs'
 
-const CRYPTO_QUERY_URL = 'https://api.coingecko.com/api/v3/coins/markets'
-
-const queryParams = {
-  vs_currency: 'eur',
-  ids: ['bitcoin', 'ethereum', 'ripple', 'chainlink']
-}
-
-const query = `${CRYPTO_QUERY_URL}?${qs.stringify(queryParams, { arrayFormat: 'comma' })}`
+const QUERY_MARKETS = 'https://api.coingecko.com/api/v3/coins/markets'
 
 function getMarketData (result, entry) {
   result[entry.symbol] = {
@@ -23,8 +16,8 @@ function getMarketData (result, entry) {
   return result
 }
 
-export default function useCryptoMarketData (refreshRate = 60000) {
-  const [marketData, setMarketData] = React.useState()
+export default function useMarketData (currencyData, transaction, refreshRate = 60000) {
+  const [data, setData] = React.useState()
   const [fetching, setFetching] = React.useState(false)
   const [error, setError] = React.useState()
 
@@ -32,6 +25,13 @@ export default function useCryptoMarketData (refreshRate = 60000) {
     () => {
       async function fetchMarketData () {
         setFetching(true)
+
+        const params = {
+          vs_currency: 'eur',
+          ids: Object.keys(transaction).map((symbol) => currencyData[symbol].id)
+        }
+
+        const query = `${QUERY_MARKETS}?${qs.stringify(params, { arrayFormat: 'comma' })}`
         const response = await fetch(query)
 
         if (response.status !== 200) {
@@ -42,28 +42,30 @@ export default function useCryptoMarketData (refreshRate = 60000) {
           return
         }
 
-        const data = await response.json()
-        const marketData = data.reduce(getMarketData, {})
+        const responseData = await response.json()
+        const marketData = responseData.reduce(getMarketData, {})
 
-        setMarketData(marketData)
+        setData(marketData)
         setFetching(false)
       }
 
-      fetchMarketData()
-
-      const interval = setInterval(() => {
+      if (currencyData && transaction) {
         fetchMarketData()
-      }, refreshRate)
 
-      return () => {
-        clearInterval(interval)
+        const interval = setInterval(() => {
+          fetchMarketData()
+        }, refreshRate)
+
+        return () => {
+          clearInterval(interval)
+        }
       }
     },
-    [refreshRate]
+    [currencyData, transaction, refreshRate]
   )
 
   return {
-    marketData,
+    data,
     fetching,
     error
   }

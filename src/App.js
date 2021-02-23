@@ -1,9 +1,10 @@
 import React from 'react'
 import styled from '@emotion/styled'
 import fs from 'fs'
-import useCryptoMarketData from './useCryptoMarketData'
-import parseTransactionData from './parseTransactionData'
+import useCurrencyData from './useCurrencyData'
+import useMarketData from './useMarketData'
 import useTransactionData from './useTransactionData'
+import parseTransactionData from './parseTransactionData'
 import useSummaryData from './useSummaryData'
 import Colors from './Colors'
 import { useStorage } from './storage'
@@ -145,7 +146,8 @@ function App() {
   const fileDragArea = React.useRef()
   const [data, setData] = React.useState()
 
-  const { marketData, fetching: fetchingMarketData } = useCryptoMarketData()
+  const { data: currencyData, fetching: fetchingCurrencyData } = useCurrencyData()
+  const { data: marketData, fetching: fetchingMarketData } = useMarketData(currencyData, data)
   const transactionData = useTransactionData(marketData, data)
   const summaryData = useSummaryData(transactionData)
 
@@ -264,7 +266,7 @@ function App() {
     if (transactionData.length === 0) {
       return (
         <TransactionEmpty>
-          {fetchingMarketData ? (
+          {(fetchingCurrencyData || fetchingMarketData) ? (
             <Loader.Large type={'ThreeDots'} />
           ) : (
             <h3>No data available!</h3>
@@ -312,7 +314,7 @@ function App() {
       <Content>
         <TopBar>
           <Header>Crypto Tax</Header>
-          {fetchingMarketData && <Loader.Small />}
+          {(fetchingCurrencyData || fetchingMarketData) && <Loader.Small />}
         </TopBar>
         {renderSummary()}
         {renderTransactionTable()}
