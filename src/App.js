@@ -4,7 +4,7 @@ import fs from 'fs'
 import useCurrencyData from './useCurrencyData'
 import useMarketData from './useMarketData'
 import useTransactionData from './useTransactionData'
-import parseTransactionData from './parseTransactionData'
+import parseTransactionData from './parser/parseTransactionData'
 import useSummaryData from './useSummaryData'
 import Colors from './Colors'
 import { useStorage } from './storage'
@@ -151,28 +151,28 @@ function App() {
   const transactionData = useTransactionData(marketData, data)
   const summaryData = useSummaryData(transactionData)
 
-  React.useEffect(
-    () => {
-      async function getTransactionData() {
-        try {
-          const path = storage.getValue('transactionFilePath')
+  // React.useEffect(
+  //   () => {
+  //     async function getTransactionData() {
+  //       try {
+  //         const path = storage.getValue('transactionFilePath')
 
-          if (path) {
-            const file = fs.createReadStream(path)
-            const data = await parseTransactionData(file)
+  //         if (path) {
+  //           const file = fs.createReadStream(path)
+  //           const data = await parseTransactionData(file)
 
-            file.close()
-            setData(data)
-          }
-        } catch (error) {
-          alert(error)
-        }
-      }
+  //           file.close()
+  //           setData(data)
+  //         }
+  //       } catch (error) {
+  //         alert(error)
+  //       }
+  //     }
 
-      getTransactionData()
-    },
-    [storage]
-  )
+  //     getTransactionData()
+  //   },
+  //   [storage]
+  // )
 
   React.useEffect(
     () => {
@@ -184,19 +184,15 @@ function App() {
         e.preventDefault()
         const file = e.dataTransfer.files[0]
 
-        if (!file) {
-          alert('Invalid file!')
-          return false
-        }
-
         async function getTransactionData() {
           try {
-            const data = await parseTransactionData(file)
+            const data = await parseTransactionData(e.dataTransfer.files)
             setData(data)
 
             storage.setValue('transactionFilePath', file.path)
           } catch (error) {
-            alert(error)
+            console.error(error)
+            // alert(error)
           }
         }
 
@@ -240,7 +236,7 @@ function App() {
     )
   }
 
-  function renderMarketData (transaction) {
+  function renderMarketData(transaction) {
     const currency = marketData?.[transaction.currencySymbol]
 
     if (!currency) {
@@ -289,7 +285,7 @@ function App() {
           </tr>
         </thead>
         <tbody>
-        {transactionData.map((transaction) => {
+          {transactionData.map((transaction) => {
             return (
               <tr key={transaction.currencySymbol}>
                 <td className={'currency'}>
