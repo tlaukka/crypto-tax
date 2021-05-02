@@ -151,28 +151,28 @@ function App() {
   const transactionData = useTransactionData(marketData, data)
   const summaryData = useSummaryData(transactionData)
 
-  // React.useEffect(
-  //   () => {
-  //     async function getTransactionData() {
-  //       try {
-  //         const path = storage.getValue('transactionFilePath')
+  React.useEffect(
+    () => {
+      async function getTransactionData() {
+        try {
+          const path = storage.getValue('transactionDataPath')
 
-  //         if (path) {
-  //           const file = fs.createReadStream(path)
-  //           const data = await parseTransactionData(file)
+          if (path) {
+            const file = fs.createReadStream(path)
+            const data = await parseTransactionData([file])
 
-  //           file.close()
-  //           setData(data)
-  //         }
-  //       } catch (error) {
-  //         alert(error)
-  //       }
-  //     }
+            file.close()
+            setData(data)
+          }
+        } catch (error) {
+          alert(error)
+        }
+      }
 
-  //     getTransactionData()
-  //   },
-  //   [storage]
-  // )
+      getTransactionData()
+    },
+    [storage]
+  )
 
   React.useEffect(
     () => {
@@ -189,10 +189,9 @@ function App() {
             const data = await parseTransactionData(e.dataTransfer.files)
             setData(data)
 
-            storage.setValue('transactionFilePath', file.path)
+            storage.setValue('transactionDataPath', file.path)
           } catch (error) {
-            console.error(error)
-            // alert(error)
+            alert(error)
           }
         }
 

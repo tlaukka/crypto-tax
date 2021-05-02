@@ -4,6 +4,10 @@ import { default as coinbase } from './coinbase'
 import { default as cex } from './cex'
 import { default as binance } from './binance'
 
+function isCsv (path) {
+  return /.csv$/i.test(path)
+}
+
 function getDataTransformer (results) {
   for (let i = 0; i < results.data.length; i++) {
     const identifier = results.data[i][0]
@@ -47,7 +51,7 @@ function readDirectory (directory) {
       }
 
       const csvFiles = files
-        .filter((file) => /.csv$/i.test(file))
+        .filter((file) => isCsv(file))
         .map((file) => `${directory.path}/${file}`)
 
       return resolve(csvFiles)
@@ -56,7 +60,7 @@ function readDirectory (directory) {
 }
 
 export default async function parseTransactionData (files) {
-  if ((files.length === 1) && (files[0].type === '')) {
+  if ((files.length === 1) && !isCsv(files[0].path)) {
     try {
       const csvFiles = await readDirectory(files[0])
       const transactionData = []
@@ -93,7 +97,9 @@ export default async function parseTransactionData (files) {
     }
   }
 
-  if ((files.length === 1) && (files[0].type === 'text/csv')) {
+  if ((files.length === 1) && isCsv(files[0].path)) {
     return parse(files[0])
   }
+
+  return {}
 }
