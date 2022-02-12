@@ -3,7 +3,10 @@ import React from 'react'
 const QUERY_COINS_LIST = 'https://api.coingecko.com/api/v3/coins/list'
 
 function getCurrencyData (result, entry) {
-  result[entry.symbol] = entry
+  result[entry.symbol] = {
+    ...entry,
+    id: entry.id.replace('-wormhole', '')
+  }
   return result
 }
 

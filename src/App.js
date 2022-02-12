@@ -59,6 +59,9 @@ const SummaryTable = styled.table({
   borderCollapse: 'collapse',
   fontSize: 16,
   marginBottom: 24,
+  tr: {
+    verticalAlign: 'bottom'
+  },
   'tr > td:first-of-type': {
     fontFamily: '"Trebuchet MS"',
     textAlign: 'left',
@@ -183,6 +186,10 @@ function App() {
       fileDragArea.current.ondrop = (e) => {
         e.preventDefault()
         const file = e.dataTransfer.files[0]
+
+        if (!file) {
+          return false
+        }
 
         async function getTransactionData() {
           try {
