@@ -1,5 +1,18 @@
 import generateDataFieldIndex from './generateDataFieldIndex'
 import getTransactionData from './getTransactionData'
+import { ParseResult, Transaction, TransactionData, TransactionType } from './types'
+
+interface Row {
+  amount: number,
+  balance: number,
+  comment: string,
+  dateUTC: string,
+  feeAmount: number,
+  feeSymbol: string,
+  pair: string,
+  symbol: string,
+  type: TransactionType
+}
 
 const DataFields = generateDataFieldIndex([
   'DateUTC',
@@ -13,7 +26,7 @@ const DataFields = generateDataFieldIndex([
   'Comment'
 ])
 
-function dataTransformer (row) {
+function dataTransformer (row: Row): Transaction {
   // Parse price info from the transaction notes
   const spotPrice = Number(row.comment.split(' ').slice(-2, -1))
   const subtotal = row.amount * spotPrice
@@ -32,8 +45,8 @@ function dataTransformer (row) {
   }
 }
 
-export default function cex (results) {
-  return getTransactionData(
+export default function cex (results: ParseResult): TransactionData {
+  return getTransactionData<Row>(
     results,
     DataFields,
     [DataFields.Type, DataFields.Pair],

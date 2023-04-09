@@ -3,12 +3,13 @@ import Papa from 'papaparse'
 import { default as coinbase } from './coinbase'
 import { default as cex } from './cex'
 import { default as binance } from './binance'
+import { DataTransformer, ParseResult, TransactionData } from './types'
 
-function isCsv (path) {
-  return /.csv$/i.test(path)
+function isCsv (path: string | Buffer) {
+  return /.csv$/i.test(path as string)
 }
 
-function getDataTransformer (results) {
+function getDataTransformer (results: ParseResult): DataTransformer {
   for (let i = 0; i < results.data.length; i++) {
     const identifier = results.data[i][0]
 
@@ -23,12 +24,12 @@ function getDataTransformer (results) {
   return () => { return {} }
 }
 
-function parse (file) {
+function parse (file: fs.ReadStream) {
   return new Promise((resolve, reject) => {
     Papa.parse(file, {
       delimiter: ',',
       dynamicTyping: true,
-      complete: (results) => {
+      complete: (results: ParseResult) => {
         if (!results?.data) {
           return reject(`No data available in file: ${file}`)
         }
@@ -36,14 +37,14 @@ function parse (file) {
         const transformer = getDataTransformer(results)
         return resolve(transformer(results))
       },
-      error: (error) => {
+      error: (error: any) => {
         return reject(error)
       }
     })
   })
 }
 
-function readDirectory (directory) {
+function readDirectory (directory: { path: fs.PathLike }): Promise<fs.PathLike[]> {
   return new Promise((resolve, reject) => {
     fs.readdir(directory.path, (error, files) => {
       if (error) {
@@ -59,7 +60,7 @@ function readDirectory (directory) {
   })
 }
 
-export default async function parseTransactionData (files) {
+export default async function parseTransactionData (files: fs.ReadStream[]): Promise<TransactionData> {
   if ((files.length === 1) && !isCsv(files[0].path)) {
     try {
       const csvFiles = await readDirectory(files[0])

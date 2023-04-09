@@ -1,5 +1,18 @@
 import generateDataFieldIndex from "./generateDataFieldIndex"
 import getTransactionData from "./getTransactionData"
+import { ParseResult, TransactionData, TransactionType } from "./types"
+
+interface Row {
+  asset: string,
+  fees: number,
+  notes: string,
+  quantity: number,
+  spotPrice: number,
+  subtotal: number,
+  timestamp: Date,
+  total: number,
+  transactionType: Lowercase<TransactionType>
+}
 
 const DataFields = generateDataFieldIndex([
   'Timestamp',
@@ -21,8 +34,8 @@ function dataTransformer (row) {
   }
 }
 
-export default function coinbase (results) {
-  return getTransactionData(
+export default function coinbase (results: ParseResult): TransactionData {
+  return getTransactionData<Row>(
     results,
     DataFields,
     [DataFields.TransactionType],

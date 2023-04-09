@@ -1,7 +1,14 @@
-import getDataSlice from "./getDataSlice"
-import getRowData from "./getRowData"
+import getDataSlice from './getDataSlice'
+import getRowData from './getRowData'
+import { DataTransformer, Field, ParseResult, Transaction, TransactionData } from './types'
 
-export default function getTransactionData (results, fields, validatorFields, identifier, transformer) {
+export default function getTransactionData<Type> (
+  results: ParseResult,
+  fields: Field,
+  validatorFields: number[],
+  identifier: string,
+  transformer: (row: Type) => Transaction
+): TransactionData {
   return getDataSlice(results, fields, identifier).reduce((result, row) => {
     for (const validatorField of validatorFields) {
       if (!row[validatorField]) {
@@ -9,7 +16,7 @@ export default function getTransactionData (results, fields, validatorFields, id
       }
     }
 
-    const rowData = getRowData(fields, row)
+    const rowData = getRowData<Type>(fields, row)
     const data = transformer(rowData)
     const asset = data.asset.toLowerCase()
 

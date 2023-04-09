@@ -1,5 +1,17 @@
 import generateDataFieldIndex from './generateDataFieldIndex'
 import getTransactionData from './getTransactionData'
+import { ParseResult, Transaction, TransactionData } from './types'
+
+interface Row {
+  amount: string,
+  'date(UTC)': string,
+  fees: string,
+  finalAmount: string,
+  method: string,
+  price: string,
+  status: string,
+  transactionId: string
+}
 
 const DataFields = generateDataFieldIndex([
   'Date(UTC)',
@@ -12,7 +24,7 @@ const DataFields = generateDataFieldIndex([
   'TransactionId'
 ])
 
-function dataTransformer (row) {
+function dataTransformer (row: Row): Transaction {
   const asset = row.finalAmount.split(' ')[1]
   const quantity = Number(row.finalAmount.split(' ')[0])
   const spotPrice = Number(row.price.split(' ')[0])
@@ -33,8 +45,8 @@ function dataTransformer (row) {
   }
 }
 
-export default function binance (results) {
-  return getTransactionData(
+export default function binance (results: ParseResult): TransactionData {
+  return getTransactionData<Row>(
     results,
     DataFields,
     [DataFields.Method],
