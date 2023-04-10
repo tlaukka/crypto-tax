@@ -1,9 +1,31 @@
 import React from 'react'
 import qs from 'qs'
+import { CurrencyData } from './useCurrencyData'
+import { TransactionByAsset } from './parser/types'
 
 const QUERY_MARKETS = 'https://api.coingecko.com/api/v3/coins/markets'
 
-function getMarketData (result, entry) {
+interface MarketEntryResponse {
+  symbol: string,
+  name: string,
+  image: string,
+  current_price: number,
+  price_change_24h: number,
+  price_change_percentage_24h: number
+}
+
+interface MarketEntry {
+  symbol: string,
+  name: string,
+  image: string,
+  currentPrice: number,
+  priceChange24H: number,
+  priceChangePercentage24H: number
+}
+
+export type MarketData = Record<string, MarketEntry>
+
+function getMarketData (result: MarketData, entry: MarketEntryResponse) {
   result[entry.symbol] = {
     symbol: entry.symbol,
     name: entry.name,
@@ -16,10 +38,10 @@ function getMarketData (result, entry) {
   return result
 }
 
-export default function useMarketData (currencyData, transaction, refreshRate = 60000) {
-  const [data, setData] = React.useState()
+export default function useMarketData (currencyData: CurrencyData, transaction: TransactionByAsset, refreshRate = 60000) {
+  const [data, setData] = React.useState<MarketData>()
   const [fetching, setFetching] = React.useState(false)
-  const [error, setError] = React.useState()
+  const [error, setError] = React.useState<number>()
 
   React.useEffect(
     () => {
@@ -42,7 +64,7 @@ export default function useMarketData (currencyData, transaction, refreshRate = 
           return
         }
 
-        const responseData = await response.json()
+        const responseData: MarketEntryResponse[] = await response.json()
         const marketData = responseData.reduce(getMarketData, {})
 
         setData(marketData)

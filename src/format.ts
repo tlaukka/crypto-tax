@@ -1,7 +1,9 @@
 const CurrencyFormat = new Intl.NumberFormat('fi-FI', { style: 'currency', currency: 'EUR' })
 
 class Currency {
-  constructor (value) {
+  _value: string
+
+  constructor (value: number) {
     this._value = CurrencyFormat.format(value).slice(0, -2)
   }
 
@@ -15,7 +17,7 @@ class Currency {
   }
 }
 
-function currency (value) {
+function currency (value: number) {
   return new Currency(value)
 }
 

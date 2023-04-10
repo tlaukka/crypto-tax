@@ -1,6 +1,6 @@
-import generateDataFieldIndex from "./generateDataFieldIndex"
-import getTransactionData from "./getTransactionData"
-import { ParseResult, TransactionData, TransactionType } from "./types"
+import generateDataFieldIndex from './generateDataFieldIndex'
+import getTransactionData from './getTransactionData'
+import { ParseResult, Transaction, TransactionByAsset, TransactionType } from './types'
 
 interface Row {
   asset: string,
@@ -11,7 +11,7 @@ interface Row {
   subtotal: number,
   timestamp: Date,
   total: number,
-  transactionType: Lowercase<TransactionType>
+  transactionType: Uppercase<TransactionType>
 }
 
 const DataFields = generateDataFieldIndex([
@@ -26,15 +26,15 @@ const DataFields = generateDataFieldIndex([
   'Notes'
 ])
 
-function dataTransformer (row) {
+function dataTransformer (row: Row): Transaction {
   return {
     ...row,
     timestamp: new Date(row.timestamp),
-    transactionType: row.transactionType.toLowerCase()
+    transactionType: row.transactionType.toLowerCase() as TransactionType
   }
 }
 
-export default function coinbase (results: ParseResult): TransactionData {
+export default function coinbase (results: ParseResult): TransactionByAsset {
   return getTransactionData<Row>(
     results,
     DataFields,

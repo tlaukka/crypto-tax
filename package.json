@@ -15,6 +15,10 @@
     "@testing-library/jest-dom": "^5.11.6",
     "@testing-library/react": "^11.2.2",
     "@testing-library/user-event": "^12.5.0",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^18.15.11",
+    "@types/react": "^18.0.33",
+    "@types/react-dom": "^18.0.11",
     "cross-env": "^7.0.3",
     "electron-is-dev": "^1.2.0",
     "electron-squirrel-startup": "^1.0.0",
@@ -25,6 +29,7 @@
     "react-dom": "^17.0.1",
     "react-loader-spinner": "^4.0.0",
     "react-scripts": "4.0.1",
+    "typescript": "^5.0.3",
     "web-vitals": "^0.2.4"
   },
   "scripts": {

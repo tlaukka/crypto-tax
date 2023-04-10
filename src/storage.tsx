@@ -3,7 +3,9 @@ import fs from 'fs'
 
 const STORAGE_FILE = 'storage.json'
 
-function readFile (path) {
+type StorageRecord = Record<string, string>
+
+function readFile (path: string): Promise<string> {
   return new Promise((resolve, reject) => {
     fs.readFile(path, 'utf8', (error, data) => {
       if (error) {
@@ -15,8 +17,8 @@ function readFile (path) {
   })
 }
 
-function writeFile (path, data) {
-  return new Promise((resolve, reject) => {
+function writeFile (path: string, data: string) {
+  return new Promise<void>((resolve, reject) => {
     fs.writeFile(path, data, 'utf8', (error) => {
       if (error) {
         return reject(error)
@@ -27,7 +29,7 @@ function writeFile (path, data) {
   })
 }
 
-async function load () {
+async function load (): Promise<StorageRecord> {
   try {
     const data = await readFile(STORAGE_FILE)
     return JSON.parse(data)
@@ -43,7 +45,7 @@ async function load () {
   }
 }
 
-async function save (data) {
+async function save (data: StorageRecord) {
   try {
     writeFile(STORAGE_FILE, JSON.stringify(data))
   } catch (error) {
@@ -51,7 +53,12 @@ async function save (data) {
   }
 }
 
-export const StorageContext = React.createContext()
+interface StorageContextType {
+  getValue: (key: string) => string | undefined,
+  setValue: (key: string, value: string) => void
+}
+
+export const StorageContext = React.createContext<StorageContextType>(null)
 
 export function useStorage () {
   return React.useContext(StorageContext)
@@ -59,13 +66,13 @@ export function useStorage () {
 
 export default function StorageProvider ({ children }) {
   const [storageReady, setStorageReady] = React.useState(false)
-  const [storage, setStorage] = React.useState()
+  const [storage, setStorage] = React.useState<StorageRecord>()
 
-  function getValue (key) {
+  function getValue (key: string): string | undefined {
     return storage?.[key]
   }
 
-  function setValue (key, value) {
+  function setValue (key: string, value: string) {
     setStorage((prevState) => ({
       ...prevState,
       [key]: value
@@ -74,13 +81,9 @@ export default function StorageProvider ({ children }) {
 
   React.useEffect(
     () => {
-      async function saveStorage () {
-        if (storage) {
-          save(storage)
-        }
+      if (storage) {
+        save(storage)
       }
-
-      saveStorage()
     },
     [storage]
   )

@@ -1,6 +1,6 @@
 import generateDataFieldIndex from './generateDataFieldIndex'
 import getTransactionData from './getTransactionData'
-import { ParseResult, Transaction, TransactionData } from './types'
+import { ParseResult, Transaction, TransactionByAsset } from './types'
 
 interface Row {
   amount: string,
@@ -45,7 +45,7 @@ function dataTransformer (row: Row): Transaction {
   }
 }
 
-export default function binance (results: ParseResult): TransactionData {
+export default function binance (results: ParseResult): TransactionByAsset {
   return getTransactionData<Row>(
     results,
     DataFields,

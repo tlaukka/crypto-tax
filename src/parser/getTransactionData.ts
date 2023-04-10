@@ -1,6 +1,6 @@
 import getDataSlice from './getDataSlice'
 import getRowData from './getRowData'
-import { DataTransformer, Field, ParseResult, Transaction, TransactionData } from './types'
+import { Field, ParseResult, Transaction, TransactionByAsset } from './types'
 
 export default function getTransactionData<Type> (
   results: ParseResult,
@@ -8,7 +8,7 @@ export default function getTransactionData<Type> (
   validatorFields: number[],
   identifier: string,
   transformer: (row: Type) => Transaction
-): TransactionData {
+): TransactionByAsset {
   return getDataSlice(results, fields, identifier).reduce((result, row) => {
     for (const validatorField of validatorFields) {
       if (!row[validatorField]) {

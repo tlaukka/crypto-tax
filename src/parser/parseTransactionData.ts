@@ -3,7 +3,11 @@ import Papa from 'papaparse'
 import { default as coinbase } from './coinbase'
 import { default as cex } from './cex'
 import { default as binance } from './binance'
-import { DataTransformer, ParseResult, TransactionData } from './types'
+import { DataTransformer, ParseResult, TransactionByAsset } from './types'
+
+export interface FileWithPath extends File {
+  path: string
+}
 
 function isCsv (path: string | Buffer) {
   return /.csv$/i.test(path as string)
@@ -24,7 +28,7 @@ function getDataTransformer (results: ParseResult): DataTransformer {
   return () => { return {} }
 }
 
-function parse (file: fs.ReadStream) {
+function parse (file: FileWithPath | fs.ReadStream): Promise<TransactionByAsset> {
   return new Promise((resolve, reject) => {
     Papa.parse(file, {
       delimiter: ',',
@@ -60,15 +64,16 @@ function readDirectory (directory: { path: fs.PathLike }): Promise<fs.PathLike[]
   })
 }
 
-export default async function parseTransactionData (files: fs.ReadStream[]): Promise<TransactionData> {
+export default async function parseTransactionData (files: FileWithPath[] | fs.ReadStream[]): Promise<TransactionByAsset> {
   if ((files.length === 1) && !isCsv(files[0].path)) {
     try {
       const csvFiles = await readDirectory(files[0])
-      const transactionData = []
+      const transactionData: TransactionByAsset[] = []
 
       for (const path of csvFiles) {
         const file = fs.createReadStream(path)
         const data = await parse(file)
+
         file.close()
 
         transactionData.push(data)

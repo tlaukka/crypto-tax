@@ -1,6 +1,16 @@
-import { getTax } from "./addTax"
+import { getTax } from './addTax'
 
-export default function useSummaryData (transactionData) {
+interface TransactionDataEntry {
+  currencySymbol: string,
+  quantity: number,
+  totalBuy: number,
+  totalSell: number,
+  profit: number,
+  tax: number,
+  net: number
+}
+
+export default function useSummaryData (transactionData: TransactionDataEntry[]) {
   if (!transactionData) {
     return null
   }

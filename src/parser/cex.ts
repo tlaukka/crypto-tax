@@ -1,6 +1,6 @@
 import generateDataFieldIndex from './generateDataFieldIndex'
 import getTransactionData from './getTransactionData'
-import { ParseResult, Transaction, TransactionData, TransactionType } from './types'
+import { ParseResult, Transaction, TransactionByAsset, TransactionType } from './types'
 
 interface Row {
   amount: number,
@@ -45,7 +45,7 @@ function dataTransformer (row: Row): Transaction {
   }
 }
 
-export default function cex (results: ParseResult): TransactionData {
+export default function cex (results: ParseResult): TransactionByAsset {
   return getTransactionData<Row>(
     results,
     DataFields,

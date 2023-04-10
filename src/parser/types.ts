@@ -1,6 +1,7 @@
 export type Field = Record<string, number>
 export type DataRow = Array<string | number | Date>
 export type TransactionType = 'buy' | 'sell' | 'receive'
+export type TransactionByAsset = Record<string, TransactionData>
 
 export interface ParseResult {
   data?: any[],
@@ -26,6 +27,7 @@ export interface TransactionData {
   receive?: Transaction[]
 }
 
+
 export interface DataTransformer {
-  (results: ParseResult): TransactionData
+  (results: ParseResult): TransactionByAsset
 }

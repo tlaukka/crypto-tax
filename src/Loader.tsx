@@ -2,13 +2,13 @@ import React from 'react'
 import { default as Spinner } from 'react-loader-spinner'
 import Colors from './Colors'
 
-function BaseLoader (props) {
-  return <Spinner type={'Oval'} color={Colors.border} {...props} />
+function BaseLoader ({ type = 'Oval', ...rest }: any) {
+  return <Spinner type={type} color={Colors.border} {...rest} />
 }
 
-function withSize (size) {
-  return function (BaseComponent) {
-    return function (props) {
+function withSize (size: number) {
+  return function (BaseComponent: typeof BaseLoader) {
+    return function (props: any) {
       return <BaseComponent {...props} width={size} height={size} />
     }
   }
