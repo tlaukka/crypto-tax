@@ -18,8 +18,9 @@ function App() {
   const fileDragArea = React.useRef<HTMLDivElement>()
   const [data, setData] = React.useState<TransactionByAsset>()
 
-  const { data: currencyData, fetching: fetchingCurrencyData } = useCurrencyData()
-  const { data: marketData, fetching: fetchingMarketData } = useMarketData(currencyData, data)
+  // const { data: currencyData, fetching: fetchingCurrencyData } = useCurrencyData()
+  // const { data: marketData, fetching: fetchingMarketData } = useMarketData(currencyData, data)
+  const { data: marketData, fetching: fetchingMarketData } = useMarketData(data)
   const transactionData = useTransactionData(marketData, data)
   const summaryData = useSummaryData(transactionData)
 
@@ -142,7 +143,8 @@ function App() {
     if (transactionData.length === 0) {
       return (
         <TransactionEmpty>
-          {(fetchingCurrencyData || fetchingMarketData) ? (
+          {/* {(fetchingCurrencyData || fetchingMarketData) ? ( */}
+          {fetchingMarketData ? (
             <Loader.Large type={'ThreeDots'} />
           ) : (
             <h3>No data available!</h3>
@@ -190,7 +192,8 @@ function App() {
       <Content>
         <TopBar>
           <Header>Crypto Tax</Header>
-          {(fetchingCurrencyData || fetchingMarketData) && <Loader.Small />}
+          {/* {(fetchingCurrencyData || fetchingMarketData) && <Loader.Small />} */}
+          {fetchingMarketData && <Loader.Small />}
         </TopBar>
         {renderSummary()}
         {renderTransactionTable()}

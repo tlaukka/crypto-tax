@@ -38,7 +38,8 @@ function getMarketData (result: MarketData, entry: MarketEntryResponse) {
   return result
 }
 
-export default function useMarketData (currencyData: CurrencyData, transaction: TransactionByAsset, refreshRate = 60000) {
+// export default function useMarketData (currencyData: CurrencyData, transaction: TransactionByAsset, refreshRate = 60000) {
+export default function useMarketData (transaction: TransactionByAsset, refreshRate = 60000) {
   const [data, setData] = React.useState<MarketData>()
   const [fetching, setFetching] = React.useState(false)
   const [error, setError] = React.useState<number>()
@@ -50,7 +51,8 @@ export default function useMarketData (currencyData: CurrencyData, transaction: 
 
         const params = {
           vs_currency: 'eur',
-          ids: Object.keys(transaction).map((symbol) => currencyData[symbol].id)
+          // ids: Object.keys(transaction).map((symbol) => currencyData[symbol].id)
+          ids: ['bitcoin', 'ethereum', 'chainlink', 'ripple', 'dogecoin']
         }
 
         const query = `${QUERY_MARKETS}?${qs.stringify(params, { arrayFormat: 'comma' })}`
@@ -71,7 +73,8 @@ export default function useMarketData (currencyData: CurrencyData, transaction: 
         setFetching(false)
       }
 
-      if (currencyData && transaction) {
+      // if (currencyData && transaction) {
+      if (transaction) {
         fetchMarketData()
 
         const interval = setInterval(() => {
@@ -83,7 +86,8 @@ export default function useMarketData (currencyData: CurrencyData, transaction: 
         }
       }
     },
-    [currencyData, transaction, refreshRate]
+    // [currencyData, transaction, refreshRate]
+    [transaction, refreshRate]
   )
 
   return {
